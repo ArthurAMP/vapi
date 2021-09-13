@@ -3,12 +3,12 @@
 #verificar bitrate
 
 from flask import Flask, request, send_from_directory
-import os, requests
+import os, requests, json
 from google.cloud import speech, texttospeech_v1, translate_v2
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
-local_url = 'http://cdf4-177-12-40-19.ngrok.io/upload'
+local_url = 'http://9310-177-12-40-19.ngrok.io/upload'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../../auth.json'
 
 def search(item):
@@ -70,10 +70,7 @@ def whatsapp_request():
 
         response_media = requests.get(incoming_msg.get('MediaUrl0', ''))
         audio_bytes = response_media._content
-        
-        # with open('audio_file1.ogg', 'wb') as output1:
-        #     output1.write(audio_bytes)
-        
+
         incoming_audio = speech.RecognitionAudio(content = audio_bytes)
 
         config_speech = speech.RecognitionConfig(
@@ -87,17 +84,19 @@ def whatsapp_request():
         print("texto: ", text_response)
         
         #Pesquisa de itens
-        if passo==0 and "compra" in text_response.lower():
+        if passo == 0:
             synthesis("Oi, tudo bem? Sou a vapi! Em qual loja você quer comprar?")
             response_msg.media(local_url)
             passo = 1
             users[number]["step"] = passo
-        elif passo==1 and "x" in text_response.lower():
-            synthesis("Você escolheu comprar na x, qual produto você quer comprar")
+
+        elif passo == 1 and "loja" in text_response.lower():
+            synthesis("Você escolheu comprar na loja de technópolis, qual produto você quer comprar")
             response_msg.media(local_url)
             passo = 2
             users[number]["step"] = passo
-        elif passo==2 and "monitor" in text_response.lower():
+
+        elif passo == 2 and "monitor" in text_response.lower():
             search_result = search('monitor')
             search_result_title = search_result[0]["title"]
 
@@ -119,6 +118,12 @@ def whatsapp_request():
             response_msg.media(local_url)
             passo = 3
             users[number]["step"] = passo
+
+        elif passo == 2 and not "monitor" in text_response.lower():
+            ttstext = "Desculpe! Ainda não temos esse pedido, como ainda estamos em teste nosso únicos produtos são monitores."
+            synthesis(ttstext)
+            response_msg.media(local_url)
+
         elif passo == 3 and "detalhes" in text_response.lower():
             search_result = search('monitor')
             search_result_title = search_result[0]["description"]
@@ -139,10 +144,12 @@ def whatsapp_request():
             ttstext += str(search_result_title_translated["translatedText"])
             synthesis(ttstext)
             response_msg.media(local_url)
-        elif passo == 3 and "custo" in text_response.lower():
+
+        elif passo == 3 and ("custa" in text_response.lower() or "preço" in text_response.lower() or "custo" in text_response.lower()):
             ttstext = "o monitor custa 999,99 reais"
             synthesis(ttstext)
             response_msg.media(local_url)
+
         elif passo == 3 and "adicionar" in text_response.lower():
             users[number]["cart"] += 999.99
             passo += 1
@@ -150,12 +157,14 @@ def whatsapp_request():
             ttstext = "O monitor foi adicionado ao carrinho. Seu carrinho custa: " + str(users[number]["cart"]) + "reais. Quer continuar comprando?"
             synthesis(ttstext)
             response_msg.media(local_url)
+
         elif passo == 4 and "não" in text_response.lower():
             ttstext = "Vamos finalizar a compra. Qual o método de pagamento?"
             passo += 1
             users[number]["step"] = passo
             synthesis(ttstext)
             response_msg.media(local_url)
+
         elif passo == 4 and "quero" in text_response.lower():
             passo = 2
             users[number]["step"] = passo
@@ -169,16 +178,29 @@ def whatsapp_request():
             users[number]["step"] = 0
             synthesis(ttstext)
             response_msg.media(local_url)
+
         elif "cancela" in text_response.lower():
             ttstext = "compra cancelada"
             users[number]["cart"] = 0
             users[number]["step"] = 0
             synthesis(ttstext)
             response_msg.media(local_url)
-        else:
-            ttstext = "desculpa não entendi o que você quis dizer."
+
+        elif passo == 7:
+            ttstext = "Lembre que para começar uma compra você deve dizer em qual loja você deseja comprar. Como estamos em teste a única loja disponível é a loja de tecnópolis"
             synthesis(ttstext)
             response_msg.media(local_url)
+
+            passo = 1
+            users[number]["step"] = passo
+        
+        else:
+            ttstext = "Desculpa não entendi o que você quis dizer."
+            synthesis(ttstext)
+            response_msg.media(local_url)
+            passo = 7
+            users[number]["step"] = passo
+
     print(response)
     print("passo:" + str(passo))
     return str(response)
