@@ -150,7 +150,7 @@ def whatsapp_request():
             synthesis(ttstext)
             response_msg.media(local_url)
 
-        elif passo == 3 and "adicionar" in text_response.lower():
+        elif passo == 3 and "adiciona" in text_response.lower():
             users[number]["cart"] += 999.99
             passo += 1
             users[number]["step"] = passo
@@ -173,7 +173,7 @@ def whatsapp_request():
             response_msg.media(local_url)
 
         elif passo == 5 and "chave" in text_response.lower():
-            ttstext = "A chave pix é 999999999999, pague o valor de " + str(users[number]["cart"]) + " reais para essa chave pix para completar a compra."
+            ttstext = "A chave pix é 999.999.999.999, pague o valor de " + str(users[number]["cart"]) + " reais para essa chave pix para completar a compra."
             users[number]["cart"] = 0
             users[number]["step"] = 0
             synthesis(ttstext)
