@@ -8,8 +8,7 @@ from google.cloud import speech, texttospeech_v1, translate_v2
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
-local_url = 'http://9310-177-12-40-19.ngrok.io/upload'
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../../auth.json'
+local_url = "YOUR_NGROK_URL"
 
 def search(item):
     r = requests.get('https://fakestoreapi.com/products')
@@ -23,7 +22,7 @@ def home():
 
 @app.route('/upload')
 def uploaded_file():
-    upload_folder = "C:/Users/kimka/Google Drive/!Projetos/Programação/vapi/vapi/backend"
+    upload_folder = "YOUR_UPLOAD_FOLDER"
     
     return send_from_directory(upload_folder,
                                'audio_file2.ogg')
@@ -198,8 +197,6 @@ def whatsapp_request():
             ttstext = "Desculpa não entendi o que você quis dizer."
             synthesis(ttstext)
             response_msg.media(local_url)
-            passo = 7
-            users[number]["step"] = passo
 
     print(response)
     print("passo:" + str(passo))
